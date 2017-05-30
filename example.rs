@@ -1,9 +1,5 @@
 extern crate aqicn;
 
-extern crate hyper;
-extern crate serde_json;
-extern crate regex;
-
 fn main() {
     let s = aqicn::feed::Aq::new("demo").here().get();
     println!("City Name  : {}", s.city);
