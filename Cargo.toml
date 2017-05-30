@@ -1,0 +1,9 @@
+[package]
+name = "aqicn"
+version = "0.0.1"
+authors = ["MPThLee <mpthlee@gmail.com>"]
+
+[dependencies]
+hyper = "0.10"
+serde_json = "1.0"
+regex = "0.2"
