@@ -7,3 +7,4 @@ authors = ["MPThLee <mpthlee@gmail.com>"]
 hyper = "0.10"
 serde_json = "1.0"
 regex = "0.2"
+hyper-native-tls = "0.2"

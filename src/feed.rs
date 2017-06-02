@@ -3,6 +3,8 @@ use regex::Regex;
 use hyper::Client;
 use serde_json;
 use serde_json::Value;
+use hyper::net::HttpsConnector;
+use hyper_native_tls::NativeTlsClient;
 
 pub struct Aq {
     token: String,
@@ -71,8 +73,10 @@ impl Aq {
 
     pub fn get(&self) -> AqFeed {
         if self.feedtype == 0 { panic!("should be select method to get Air Quality") }
-
-        let c = Client::new();
+    
+        let tls = NativeTlsClient::new().unwrap();
+        let ctls = HttpsConnector::new(tls);
+        let c = Client::with_connector(ctls);
         let feedtype: String = match self.feedtype {
             1 => "geo:".to_string() + &self.lat.to_string() + &";".to_string() + &self.lng.to_string(),
             2 => "here".to_string(),
