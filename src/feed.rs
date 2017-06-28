@@ -1,22 +1,19 @@
 use std::io::Read;
 use regex::Regex;
-use hyper::Client;
 use serde_json;
 use serde_json::Value;
-use hyper::net::HttpsConnector;
-use hyper_native_tls::NativeTlsClient;
+use reqwest;
 
 pub struct Aq {
     token: String,
     feedtype: i8,
 
-    lat: f32,
-    lng: f32,
+    lat: Option<f32>,
+    lng: Option<f32>,
 
-    city: String
+    city: Option<String>
 }
 
-#[derive(Debug)]
 pub struct AqFeed {
     pub city: String,
     pub aqi: f64,
@@ -43,18 +40,18 @@ impl Aq {
             token: token.to_string(),
             feedtype: 0,
             
-            lat: 0.0000000,
-            lng: 0.0000000,
+            lat: None,
+            lng: None,
 
-            city: "".to_string(),
+            city: None,
         }
     }
 
     pub fn geo(&mut self, lat: f32, lng: f32) -> &mut Aq {
         
         self.feedtype = check(self.feedtype, 1);
-        self.lat = lat;
-        self.lng = lng;
+        self.lat = Some(lat);
+        self.lng = Some(lng);
         self
     }
 
@@ -65,7 +62,7 @@ impl Aq {
 
     pub fn city(&mut self, city: &str) -> &mut Aq{
         self.feedtype = check(self.feedtype, 3);
-        self.city = city.to_string();
+        self.city = Some(city.to_string());
         self
     }
 
@@ -73,21 +70,18 @@ impl Aq {
 
     pub fn get(&self) -> AqFeed {
         if self.feedtype == 0 { panic!("should be select method to get Air Quality") }
-    
-        let tls = NativeTlsClient::new().unwrap();
-        let ctls = HttpsConnector::new(tls);
-        let c = Client::with_connector(ctls);
+       
         let feedtype: String = match self.feedtype {
-            1 => "geo:".to_string() + &self.lat.to_string() + &";".to_string() + &self.lng.to_string(),
+            1 => "geo:".to_string() + &self.lat.unwrap().to_string() + &";".to_string() + &self.lng.unwrap().to_string(),
             2 => "here".to_string(),
-            3 => self.city.to_string(),
+            3 => self.city.clone().unwrap().to_string(),
             _ => panic!("wait, what?")
         };
-        let url: String = "http://api.waqi.info/feed/".to_string()
+        let url: String = "https://api.waqi.info/feed/".to_string()
                           + &feedtype.to_string()
                           + &"/?token=".to_string()
                           + &self.token.to_string();
-        let mut r = c.get(&url).send().unwrap();
+        let mut r = reqwest::get(&url).unwrap();
         let mut d = String::new();
         r.read_to_string(&mut d).unwrap();
 
@@ -147,19 +141,4 @@ fn aqi_level(f: f64) -> f64 {
            else { panic!("Impossible input"); };
 
     r
-}
-
-
-#[cfg(test)]
-#[test]
-fn test_city() { // Test demo City output
-    let a = Aq::new("demo").city("Shanghai").get();
-    assert_eq!(a.city, r#"Shanghai"#);
-}
-
-#[test]
-#[should_panic(expected = "Already feedType allocated")]
-fn test_duplicate() { // duplicate request test
-    let a = Aq::new("demo").city("Shanghai").geo(121.4489017, 31.2047372).get();
-    assert_eq!(a.city, r#"Shanghai"#);
 }
