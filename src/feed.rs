@@ -1,5 +1,4 @@
 use std::io::Read;
-use regex::Regex;
 use serde_json;
 use serde_json::Value;
 use reqwest;
@@ -86,12 +85,12 @@ impl Aq {
         r.read_to_string(&mut d).unwrap();
 
         let j: Value = serde_json::from_str(&d).unwrap();
-        let time: String = remove_quotes(j["data"]["time"]["s"].to_string() + j["data"]["time"]["tz"].to_string().as_str());
+        let time: String = remove_quotes(format!("{}{}", j["data"]["time"]["s"].to_string(), j["data"]["time"]["tz"].to_string()).as_str());
         let aqi = j["data"]["aqi"].as_f64().unwrap_or_default();
         let aqilevel = aqi_level(aqi);
 
         AqFeed {
-            city: remove_quotes(j["data"]["city"]["name"].to_string()),
+            city: remove_quotes(j["data"]["city"]["name"].as_str().unwrap()),
             aqi: aqi,
             aqilevel: aqilevel,
             co: j["data"]["iaqi"]["co"]["v"].as_f64().unwrap_or_default(),
@@ -123,11 +122,8 @@ fn check(s: i8, r: i8) -> i8 {
     }
 }
 
-fn remove_quotes(s: String) -> String {
-    let re = Regex::new(r#"""#).unwrap();
-    let o = re.replace_all(&s, r#""#);
-
-    o.to_string()
+fn remove_quotes(s: &str) -> String {
+    s.replace(r#"""#,"")
 }
 
 
