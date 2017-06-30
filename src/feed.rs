@@ -74,7 +74,7 @@ impl Aq {
             1 => "geo:".to_string() + &self.lat.unwrap().to_string() + &";".to_string() + &self.lng.unwrap().to_string(),
             2 => "here".to_string(),
             3 => self.city.clone().unwrap().to_string(),
-            _ => panic!("wait, what?")
+            _ => unreachable!()
         };
         let url: String = "https://api.waqi.info/feed/".to_string()
                           + &feedtype.to_string()
@@ -134,7 +134,7 @@ fn aqi_level(f: f64) -> f64 {
            else if f >= 151f64 && f < 201f64 { 3f64 }
            else if f >= 201f64 && f < 301f64 { 4f64 }
            else if f >  300f64               { 5f64 }
-           else { panic!("Impossible input"); };
+           else { unreachable!() };
 
     r
 }
