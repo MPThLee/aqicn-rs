@@ -10,7 +10,7 @@ pub struct Aq {
     lat: Option<f32>,
     lng: Option<f32>,
 
-    city: Option<String>
+    city: Option<String>,
 }
 
 pub struct AqFeed {
@@ -33,12 +33,12 @@ pub struct AqFeed {
 }
 
 #[allow(dead_code)]
-impl Aq { 
-     pub fn new(token: &str) -> Aq {
-        Aq { 
+impl Aq {
+    pub fn new(token: &str) -> Aq {
+        Aq {
             token: token.to_string(),
             feedtype: 0,
-            
+
             lat: None,
             lng: None,
 
@@ -47,7 +47,7 @@ impl Aq {
     }
 
     pub fn geo(&mut self, lat: f32, lng: f32) -> &mut Aq {
-        
+
         self.feedtype = check(self.feedtype, 1);
         self.lat = Some(lat);
         self.lng = Some(lng);
@@ -59,7 +59,7 @@ impl Aq {
         self
     }
 
-    pub fn city(&mut self, city: &str) -> &mut Aq{
+    pub fn city(&mut self, city: &str) -> &mut Aq {
         self.feedtype = check(self.feedtype, 3);
         self.city = Some(city.to_string());
         self
@@ -68,24 +68,33 @@ impl Aq {
 
 
     pub fn get(&self) -> AqFeed {
-        if self.feedtype == 0 { panic!("should be select method to get Air Quality") }
-       
+        if self.feedtype == 0 {
+            panic!("should be select method to get Air Quality")
+        }
+
         let feedtype: String = match self.feedtype {
-            1 => "geo:".to_string() + &self.lat.unwrap().to_string() + &";".to_string() + &self.lng.unwrap().to_string(),
+            1 => {
+                "geo:".to_string() + &self.lat.unwrap().to_string() + &";".to_string() +
+                    &self.lng.unwrap().to_string()
+            }
             2 => "here".to_string(),
             3 => self.city.clone().unwrap().to_string(),
-            _ => unreachable!()
+            _ => unreachable!(),
         };
-        let url: String = "https://api.waqi.info/feed/".to_string()
-                          + &feedtype.to_string()
-                          + &"/?token=".to_string()
-                          + &self.token.to_string();
+        let url: String = "https://api.waqi.info/feed/".to_string() + &feedtype.to_string() +
+            &"/?token=".to_string() + &self.token.to_string();
         let mut r = reqwest::get(&url).unwrap();
         let mut d = String::new();
         r.read_to_string(&mut d).unwrap();
 
         let j: Value = serde_json::from_str(&d).unwrap();
-        let time: String = remove_quotes(format!("{}{}", j["data"]["time"]["s"].to_string(), j["data"]["time"]["tz"].to_string()).as_str());
+        let time: String = remove_quotes(
+            format!(
+                "{}{}",
+                j["data"]["time"]["s"].to_string(),
+                j["data"]["time"]["tz"].to_string()
+            ).as_str(),
+        );
         let aqi = j["data"]["aqi"].as_f64().unwrap_or_default();
         let aqilevel = aqi_level(aqi);
 
@@ -105,36 +114,47 @@ impl Aq {
             temperture: j["data"]["iaqi"]["t"]["v"].as_f64().unwrap_or_default(),
             wind: j["data"]["iaqi"]["w"]["v"].as_f64().unwrap_or_default(),
             wd: j["data"]["iaqi"]["wd"]["v"].as_f64().unwrap_or_default(),
-            time: time.to_string(), 
+            time: time.to_string(),
         }
-        
-    }
 
+    }
 }
 
 fn check(s: i8, r: i8) -> i8 {
-    if r < 0 { panic!("feedType should not be under 0") }
-    if r > 3 { panic!("feedType Should not be over 3") }
-    
+    if r < 0 {
+        panic!("feedType should not be under 0")
+    }
+    if r > 3 {
+        panic!("feedType Should not be over 3")
+    }
+
     match (s, r) {
         (0, _) => r,
-        (_, _) => panic!("Already feedType allocated, Can Not dupplicate 'geo()', 'here()', 'city()'.  try '.get()'")
+        (_, _) => panic!("Can not dupplicate with 'geo()', 'here()', 'city()'.  try '.get()'"),
     }
 }
 
 fn remove_quotes(s: &str) -> String {
-    s.replace(r#"""#,"")
+    s.replace(r#"""#, "")
 }
 
 
 fn aqi_level(f: f64) -> f64 {
-    let r: f64= if f >= 0f64   && f < 51f64  { 0f64 }
-           else if f >= 51f64  && f < 101f64 { 1f64 }
-           else if f >= 101f64 && f < 151f64 { 2f64 }
-           else if f >= 151f64 && f < 201f64 { 3f64 }
-           else if f >= 201f64 && f < 301f64 { 4f64 }
-           else if f >  300f64               { 5f64 }
-           else { unreachable!() };
+    let r: f64 = if f >= 0f64 && f < 51f64 {
+        0f64
+    } else if f >= 51f64 && f < 101f64 {
+        1f64
+    } else if f >= 101f64 && f < 151f64 {
+        2f64
+    } else if f >= 151f64 && f < 201f64 {
+        3f64
+    } else if f >= 201f64 && f < 301f64 {
+        4f64
+    } else if f > 300f64 {
+        5f64
+    } else {
+        unreachable!()
+    };
 
     r
 }
