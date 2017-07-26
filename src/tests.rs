@@ -8,7 +8,7 @@ fn test_city() {
 }
 
 #[test]
-#[should_panic(expected = "Already feedType allocated")]
+#[should_panic(expected = "Can not dupplicate with")]
 fn test_duplicate() {
     // duplicate request test
     let a = Aq::new("demo")
