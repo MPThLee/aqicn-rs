@@ -1,7 +1,4 @@
-use std::io::Read;
-use serde_json;
 use serde_json::Value;
-use reqwest;
 
 pub struct Aq {
     token: String,
@@ -83,37 +80,37 @@ impl Aq {
         };
         let url: String = "https://api.waqi.info/feed/".to_string() + &feedtype.to_string() +
             &"/?token=".to_string() + &self.token.to_string();
-        let mut r = reqwest::get(&url).unwrap();
-        let mut d = String::new();
-        r.read_to_string(&mut d).unwrap();
 
-        let j: Value = serde_json::from_str(&d).unwrap();
+        let jb: Value = super::get::get_data(url.as_str()).unwrap();
+        let j: Value = jb["data"].clone();
+        
         let time: String = remove_quotes(
             format!(
                 "{}{}",
-                j["data"]["time"]["s"].to_string(),
-                j["data"]["time"]["tz"].to_string()
+                j["time"]["s"].to_string(),
+                j["time"]["tz"].to_string()
             ).as_str(),
         );
-        let aqi = j["data"]["aqi"].as_f64().unwrap_or_default();
+        let aqi = j["aqi"].as_f64().unwrap_or_default();
+        let iaqi = &j["iaqi"];
         let aqilevel = aqi_level(aqi);
 
         AqFeed {
-            city: remove_quotes(j["data"]["city"]["name"].as_str().unwrap()),
+            city: remove_quotes(j["city"]["name"].as_str().unwrap()),
             aqi: aqi,
             aqilevel: aqilevel,
-            co: j["data"]["iaqi"]["co"]["v"].as_f64().unwrap_or_default(),
-            dew: j["data"]["iaqi"]["d"]["v"].as_f64().unwrap_or_default(),
-            humidity: j["data"]["iaqi"]["h"]["v"].as_f64().unwrap_or_default(),
-            no2: j["data"]["iaqi"]["no2"]["v"].as_f64().unwrap_or_default(),
-            o3: j["data"]["iaqi"]["o3"]["v"].as_f64().unwrap_or_default(),
-            pressure: j["data"]["iaqi"]["p"]["v"].as_f64().unwrap_or_default(),
-            pm10: j["data"]["iaqi"]["pm10"]["v"].as_f64().unwrap_or_default(),
-            pm25: j["data"]["iaqi"]["pm25"]["v"].as_f64().unwrap_or_default(),
-            so2: j["data"]["iaqi"]["so2"]["v"].as_f64().unwrap_or_default(),
-            temperture: j["data"]["iaqi"]["t"]["v"].as_f64().unwrap_or_default(),
-            wind: j["data"]["iaqi"]["w"]["v"].as_f64().unwrap_or_default(),
-            wd: j["data"]["iaqi"]["wd"]["v"].as_f64().unwrap_or_default(),
+            co: iaqi["co"]["v"].as_f64().unwrap_or_default(),
+            dew: iaqi["d"]["v"].as_f64().unwrap_or_default(),
+            humidity: iaqi["h"]["v"].as_f64().unwrap_or_default(),
+            no2: iaqi["no2"]["v"].as_f64().unwrap_or_default(),
+            o3: iaqi["o3"]["v"].as_f64().unwrap_or_default(),
+            pressure: iaqi["p"]["v"].as_f64().unwrap_or_default(),
+            pm10: iaqi["pm10"]["v"].as_f64().unwrap_or_default(),
+            pm25: iaqi["pm25"]["v"].as_f64().unwrap_or_default(),
+            so2: iaqi["so2"]["v"].as_f64().unwrap_or_default(),
+            temperture: iaqi["t"]["v"].as_f64().unwrap_or_default(),
+            wind: iaqi["w"]["v"].as_f64().unwrap_or_default(),
+            wd: iaqi["wd"]["v"].as_f64().unwrap_or_default(),
             time: time.to_string(),
         }
 
