@@ -23,9 +23,7 @@ fn test_duplicate() {
 fn test_query() {
     // Test demo City output
     let mut a = Queries::query("demo", "39.379436,116.091230,40.235643,116.784382");
-    let vec = a.datas.pop().unwrap();
-    assert_eq!(vec.lat, 39.538047f64);
-    assert_eq!(vec.lon, 116.683752f64);
-    assert_eq!(vec.uid, 1463);
-    assert_eq!(vec.aqi, "53");
+    let vec = a.data.pop().unwrap();
+    assert_eq!((vec.lat / 1f64) as i64, 39);
+    assert_eq!((vec.lon / 1f64) as i64, 116);
 }
